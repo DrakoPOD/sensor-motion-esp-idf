@@ -1,0 +1,22 @@
+{
+  "files.associations": {
+    "*._js": "javascript",
+    "*.vue": "vue",
+    "i2c_master.h": "c",
+    "freertos.h": "c",
+    "cstdint": "cpp",
+    "mpu9250_custom.h": "c",
+    "task.h": "c",
+    "*.txt": "cpp"
+  },
+  "cSpell.ignoreWords": [
+    "Authmode",
+    "Fros",
+    "SMPLRT",
+    "XOUT",
+    "YOUT",
+    "ZOUT",
+    "authmode",
+    "familiagonzalez"
+  ]
+}

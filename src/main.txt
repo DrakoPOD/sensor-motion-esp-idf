@@ -1,0 +1,63 @@
+#include <stdio.h>
+
+#include "driver/i2c_master.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+
+#define SCALE_FACTOR_2 16384.0
+#define ACCEL_XOUT_H 0x3B
+#define GYRO_XOUT_H 0x43
+
+#define SCL 4
+#define SDA 5
+
+const char* TAG_MPU = "MPU9250";
+
+i2c_master_bus_config_t bus_config = {
+    .sda_io_num = SDA,
+    .scl_io_num = SCL,
+    .clk_source = I2C_CLK_SRC_DEFAULT,
+    .flags.enable_internal_pullup = true,
+};
+
+i2c_master_bus_handle_t bus_handle;
+i2c_master_dev_handle_t mpu_handle;
+i2c_device_config_t mpu_cfg = {
+    .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+    .device_address = 0x68,  // Dirección del MPU-9250
+    .scl_speed_hz = 400000,
+};
+
+float scale_factor = SCALE_FACTOR_2;
+
+float accel_x_offset = 0.0f;
+float accel_y_offset = 0.0f;
+float accel_z_offset = 0.0f;
+
+float gyro_x_offset = 0.0f;
+float gyro_y_offset = 0.0f;
+float gyro_z_offset = 0.0f;
+
+void app_main() {
+    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_config, &bus_handle));
+    ESP_ERROR_CHECK(i2c_master_bus_add_device(bus_handle, &mpu_cfg, &mpu_handle));
+
+    ESP_LOGI(TAG_MPU, "MPU9250 inicializado.");
+
+    float accel[3];
+
+    while (1) {
+        uint8_t buf[1] = {ACCEL_XOUT_H};
+        uint8_t buffer[6];
+
+        ESP_ERROR_CHECK(i2c_master_transmit_receive(mpu_handle, buf, 1, buffer, 6, -1));
+
+        accel[0] = (float)((int16_t)(buffer[0] << 8 | buffer[1]));
+        accel[1] = (float)((int16_t)(buffer[2] << 8 | buffer[3]));
+        accel[2] = (float)((int16_t)(buffer[4] << 8 | buffer[5]));
+
+        // log data
+        ESP_LOGI(TAG_MPU, "X: %f, Y: %f, Z: %f", accel[0], accel[1], accel[2]);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
